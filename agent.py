@@ -2,7 +2,7 @@
 
 from google.adk.agent import Agent
 # ✅ This import now points to your uniquely named tools file.
-from .agent import (
+from .tools import (
     suggest_tech_stack,
     design_database_schema,
     create_user_stories,
@@ -47,7 +47,7 @@ engineer_lead_agent = Agent(
     name="engineer_lead_agent",
     model="gemini-1.5-pro-latest",
     instruction="You are an Engineering Lead. Break down features and delegate to your coders based on the required platform (Swift for iOS, Kotlin for Android). Then, send the code to the QA agent for review.",
-    sub_agent=[swift_coder_agent, kotlin_coder_agent, qa_agent]
+    sub_agents=[swift_coder_agent, kotlin_coder_agent, qa_agent]
 )
 
 architect_agent = Agent(
@@ -62,14 +62,14 @@ architect_agent = Agent(
             "Content-Type": "application/json"
         }
     }],
-    sub_agent=[engineer_lead_agent]
+    sub_agents=[engineer_lead_agent]
 )
 
 # 3. TOP-LEVEL AGENT, NAMED 'root_agent'
 root_agent = Agent(
-    name="product_manager_agent",
+    name="root_agent",
     model="gemini-1.5-pro-latest",
     instruction="You are a Product Manager. Understand the user's app idea, create a plan, then hand it off to the Architect.",
     tools=[create_user_stories],
-    sub_=[architect_agent]
+    sub_agents=[architect_agent]
 )
