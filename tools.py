@@ -58,6 +58,19 @@ def read_file_content(file_path: str) -> str:
     except Exception as e:
         return f"An error occurred: {e}"
 
+# Tool 16
+def list_mcp_files(mcp_instruction: str) -> str:
+    """
+    Instructs an agent with MCP filesystem tools to perform an action.
+    Example: "List files in the current directory."
+    This tool itself doesn't call MCP directly, but formulates a prompt
+    for an agent that has MCP tools.
+    """
+    # This function serves as a wrapper to guide the LLM agent
+    # to use its MCP capabilities. The actual MCP call will be
+    # handled by the MCPToolset configured in the agent.
+    return f"Please use your filesystem tools to: {mcp_instruction}"
+
 # Tool 9
 def add_placeholder_data(code: str) -> str:
     """Adds placeholder data to the given UI code."""
