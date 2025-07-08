@@ -1,0 +1,2 @@
+This is a sample file inside the MCP file system root.
+The architect_agent can use MCP tools to list this directory and read this file.

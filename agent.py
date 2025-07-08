@@ -1,6 +1,10 @@
 # masterpiece_agent/agent.py
 
+import os # Required for path operations
 from google.adk.agents import Agent
+# For MCP Tool integration
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+
 from .tools import (
     suggest_tech_stack,
     design_database_schema,
@@ -11,6 +15,14 @@ from .tools import (
     write_unit_tests,
     read_file_content
 )
+
+# Define the target folder for the MCP File System Server
+# This will be a directory named 'mcp_filesystem_root' in the same directory as this agent.py file.
+# The MCP server will have access to this directory.
+MCP_TARGET_FOLDER_NAME = "mcp_filesystem_root"
+TARGET_FOLDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), MCP_TARGET_FOLDER_NAME)
+# Ensure the path is absolute for the MCP server
+ABSOLUTE_TARGET_FOLDER_PATH = os.path.abspath(TARGET_FOLDER_PATH)
 
 # 1. SPECIALISTS
 qa_agent = Agent(
@@ -42,12 +54,32 @@ engineer_lead_agent = Agent(
     sub_agents=[swift_coder_agent, kotlin_coder_agent, qa_agent]
 )
 
-# ✅ CORRECTED: The MCP client and configuration have been completely removed.
+# Architect agent now includes MCPToolset for file system operations
 architect_agent = Agent(
     name="architect_agent",
     model="gemini-1.5-pro-latest",
-    instruction="You are a Software Architect. Design the tech stack and database schema. You can also read files to understand existing project structures.",
-    tools=[suggest_tech_stack, design_database_schema, read_file_content],
+    instruction="You are a Software Architect. Design the tech stack and database schema. "
+                "You can also read files to understand existing project structures using local tools, "
+                "and interact with a dedicated file system via MCP tools (e.g., list files, read files from the MCP directory). "
+                f"The MCP file system is rooted at '{MCP_TARGET_FOLDER_NAME}'.",
+    tools=[
+        suggest_tech_stack,
+        design_database_schema,
+        read_file_content, # Existing file reading tool
+        MCPToolset(
+            connection_params=StdioServerParameters(
+                command='npx',
+                args=[
+                    "-y",  # Argument for npx to auto-confirm install
+                    "@modelcontextprotocol/server-filesystem",
+                    # IMPORTANT: This MUST be an ABSOLUTE path.
+                    ABSOLUTE_TARGET_FOLDER_PATH,
+                ],
+            ),
+            # Optional: Filter which tools from the MCP server are exposed
+            # tool_filter=['list_directory', 'read_file']
+        )
+    ],
     sub_agents=[engineer_lead_agent]
 )
 
