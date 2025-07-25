@@ -12,6 +12,15 @@ TARGET_FOLDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "m
 # Ensure the TARGET_FOLDER_PATH is absolute.
 ABSOLUTE_TARGET_FOLDER_PATH = os.path.abspath(TARGET_FOLDER_PATH)
 
+# --- Start Debugging Prints ---
+print("--- AGENT SCRIPT START ---")
+print(f"Current Working Directory: {os.getcwd()}")
+print(f"Absolute Path for MCP: {ABSOLUTE_TARGET_FOLDER_PATH}")
+print(f"Script Path: {__file__}")
+# print(f"System PATH variable: {os.environ.get('PATH')}") # This can be very long, uncomment if needed
+print("--- END DEBUGGING PRINTS ---")
+
+
 # 1. SPECIALISTS
 qa_agent = Agent(
     name="qa_agent",
@@ -53,14 +62,16 @@ architect_agent = Agent(
         tools.read_file_content,
         tools.list_mcp_files, # Added the new MCP tool here as well
         MCPToolset(
-            connection_params=StdioConnectionParams( # Updated class name
-                command='npx',
+            connection_params=StdioConnectionParams(
+                # Using cmd.exe /c with the full path to npx.cmd for Windows robustness
+                command='cmd.exe',
                 args=[
-                    "-y",  # Argument for npx to auto-confirm install
+                    '/c', # Tells cmd.exe to execute the command and then terminate
+                    'C:\\Program Files\\nodejs\\npx.cmd', # Full path from user
+                    "-y",
                     "@modelcontextprotocol/server-filesystem",
-                    # IMPORTANT: This MUST be an ABSOLUTE path to a folder the
-                    # npx process can access.
-                    ABSOLUTE_TARGET_FOLDER_PATH,
+                    # Using a version of the path with forward slashes for better compatibility
+                    ABSOLUTE_TARGET_FOLDER_PATH.replace('\\', '/'),
                 ],
             ),
             # Optional: Filter which tools from the MCP server are exposed
