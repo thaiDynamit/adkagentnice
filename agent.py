@@ -1,6 +1,7 @@
 # masterpiece_agent/agent.py
 
 from google.adk.agents import Agent
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
 from .tools import (
     suggest_tech_stack,
     design_database_schema,
@@ -47,7 +48,17 @@ architect_agent = Agent(
     name="architect_agent",
     model="gemini-1.5-pro-latest",
     instruction="You are a Software Architect. Design the tech stack and database schema. You can also read files to understand existing project structures.",
-    tools=[suggest_tech_stack, design_database_schema, read_file_content],
+    tools=[
+        suggest_tech_stack,
+        design_database_schema,
+        read_file_content,
+        MCPToolset(
+            connection_params=StdioServerParameters(
+                command="docker",
+                args=["mcp", "gateway", "run"],
+            )
+        ),
+    ],
     sub_agents=[engineer_lead_agent]
 )
 
